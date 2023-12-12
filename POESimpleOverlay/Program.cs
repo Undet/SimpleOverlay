@@ -11,9 +11,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        //AppRun();
-        var a = TextData.WrapText("Это пример текста, который нужно переносить по строкам.", 50);
-        Console.WriteLine(a);
+        AppRun();
     }
 
 
@@ -50,6 +48,7 @@ internal class Program
             Console.Write("Введите команду/файл: ");
             var input = Console.ReadLine();
             ConsoleHelper.Handle(input);
+            
         }
 
     }

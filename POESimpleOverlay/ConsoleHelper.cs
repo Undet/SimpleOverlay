@@ -64,10 +64,10 @@ namespace POESimpleOverlay
                         DeleteById(int.Parse(goodString[1])); break;
                     case "change":
                         Change(int.Parse(goodString[1])); break;
-
+                    case "goto":
+                        GotoCommand(int.Parse(goodString[1])); break;
                     default:
                         break;
-
                 }
             }
             catch (Exception e )
@@ -75,6 +75,11 @@ namespace POESimpleOverlay
                 Console.WriteLine("Ошибка ввода команды: " + e.Message);
             }
             
+        }
+
+        private static void GotoCommand(int v)
+        {
+            simpleTextOverlay.GotoPage(v);
         }
 
         private static void DeleteById(int id)
@@ -182,7 +187,8 @@ namespace POESimpleOverlay
                               "\tlist - Список зарегистрированных оверлеев\n" +
                               "\thelp - Вывести этот список\n" +
                               "\tdelall - Удалить все оверлеи\n" +
-                              "\tclear - Отчистить консоль");
+                              "\tclear - Отчистить консоль\n" +
+                              "\tgoto {page} - Перелистнуть на страницу {page}");
         }
         public static PositionHelper.ItemPosition GetElementPosition()
         {

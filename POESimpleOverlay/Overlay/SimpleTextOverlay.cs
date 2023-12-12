@@ -70,21 +70,30 @@ namespace POESimpleOverlay.Overlay
         {
             var gfx = e.Graphics;
             var textLine = _text[_lineIndex];
-            var lines = TextData.ComputeLines(textLine, _maxChars);
             gfx.ClearScene(_brushes["background"]);
 
             if (TextData.IsStringHeader(textLine))
             {
                 _header = textLine;
             }
+
             gfx.DrawText(_fonts["header"],
                 _brushes["white"],
-                gfx.Width - 50,
+                gfx.Width - 70,
                 10,
                 $"({_lineIndex}/{_text.Length - 1})");
-            gfx.DrawText(_fonts["header"], _brushes["darkred"], gfx.Width / 2 - 50, 10, _header);
-            gfx.DrawText(_fonts["text"], _brushes["white"], 10, 30, TextData.SplitToLines(textLine, (int)Math.Floor((double)_window.Width / _fonts["text"].FontSize * 1.8)));
 
+
+            gfx.DrawText(_fonts["header"], _brushes["darkred"], gfx.Width / 2 , 10, _header);
+            gfx.DrawText(_fonts["text"], _brushes["white"], 10, 30, TextData.WrapText(textLine, (int)(_window.Width / _fonts["text"].FontSize * 2) - 10));
+
+        }
+        public void GotoPage(int index)
+        {
+            if (index < _text.Length && index > 0)
+            { 
+                _lineIndex = index;
+            }
         }
 
         public void NextString()
