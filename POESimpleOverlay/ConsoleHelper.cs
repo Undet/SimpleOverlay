@@ -1,13 +1,7 @@
-﻿using POESimpleOverlay.DataModels;
+﻿using GlobalHotKeys;
+using POESimpleOverlay.DataModels;
 using POESimpleOverlay.Overlay;
-using SharpDX.Direct2D1;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using static Microsoft.FSharp.Core.ByRefKinds;
+using POESimpleOverlay;
 
 namespace POESimpleOverlay
 {
@@ -16,7 +10,7 @@ namespace POESimpleOverlay
         public static List<OverlayWrapper> overlayWrappers = new List<OverlayWrapper>();
         public static SimpleTextOverlay simpleTextOverlay;
         public static List<SimpleImageOverlay> simpleImageOverlays  = new List<SimpleImageOverlay>();
-
+        public static HotKeyManager keyManager = new HotKeyManager();
         public static async void Handle(string inputs)
         {
 
@@ -66,6 +60,8 @@ namespace POESimpleOverlay
                         Change(int.Parse(goodString[1])); break;
                     case "goto":
                         GotoCommand(int.Parse(goodString[1])); break;
+                    case "rebound":
+                        ReboundHotKeys(); break;
                     default:
                         break;
                 }
@@ -81,7 +77,6 @@ namespace POESimpleOverlay
         {
             simpleTextOverlay.GotoPage(v);
         }
-
         private static void DeleteById(int id)
         {
             var overlay = overlayWrappers.Find((x) => {  return x.Id == id; });
@@ -115,6 +110,34 @@ namespace POESimpleOverlay
                 Console.WriteLine("\t" + overlay.ToString());
             }
         }
+        private static void ReboundHotKeys()
+        {
+            Console.Clear();
+            while (true)
+            {
+                Console.WriteLine("\nОжидание сочитания клавиш для nextSttring");
+                var nextString = KeyInfo.ReadKey();
+                Console.WriteLine("Ожидание сочитания клавиш для previousString");
+                var previousString = KeyInfo.ReadKey();
+                Console.WriteLine("Ожидание сочитания клавиш для hideOverlay");
+                var hideOverlay = KeyInfo.ReadKey();
+
+                Console.WriteLine(
+                    $"\nnextString:\t{nextString.Key} + {nextString.Modifiers}\n" +
+                    $"previousString:\t{previousString.Key} + {previousString.Modifiers}\n" +
+                    $"hideOverlay:\t{hideOverlay.Key} + {hideOverlay.Modifiers}\n" +
+                    $"\n[y] для продолжения\n[n] для перевыбора\n[e] для выхода");
+                var input = Console.ReadKey(false).KeyChar;
+                switch (input)
+                {
+                    case 'y': keyManager = RegisterHotKeys(nextString, previousString, hideOverlay); break;
+                    case 'n': continue;
+                    default:
+                        return;
+                }
+            }            
+        }
+
         private static OverlayWrapper CreateOverlayWrapper(string path)
         {
             if (!Path.Exists(path))
@@ -206,6 +229,40 @@ namespace POESimpleOverlay
             var inputStrng = Console.ReadLine();
             var intPos = int.Parse(inputStrng);
             return (PositionHelper.ItemPosition)intPos;
+        }
+        public static void DefaultHotKeyRegistration()
+        {
+            KeyInfo nextString = new KeyInfo(new ConsoleKeyInfo('z', ConsoleKey.Z, false, false, false));
+            KeyInfo previousString = new KeyInfo(new ConsoleKeyInfo('z', ConsoleKey.Z, false, false, true));
+            KeyInfo hideOverlay = new KeyInfo(new ConsoleKeyInfo('r', ConsoleKey.R, false, false, true));
+
+            keyManager = RegisterHotKeys(nextString, previousString, hideOverlay);
+        }
+        private static HotKeyManager RegisterHotKeys(KeyInfo nextString, KeyInfo previousString, KeyInfo hideOverlay)
+        {
+            var hotKeyManager = new HotKeyManager();
+            var subscription = hotKeyManager.HotKeyPressed.Subscribe(HotKeyPressed);
+            var nextStringBind = hotKeyManager.Register(nextString.Key, nextString.Modifiers);
+            var previousStringBind = hotKeyManager.Register(previousString.Key, previousString.Modifiers);
+            var hideOverlayBind = hotKeyManager.Register(hideOverlay.Key, hideOverlay.Modifiers);
+            void HotKeyPressed(HotKey hotKey)
+            {
+                if (hotKey.Key == previousString.Key && hotKey.Modifiers == previousString.Modifiers && ConsoleHelper.simpleTextOverlay != null)
+                {
+                    ConsoleHelper.simpleTextOverlay.PreviousString();
+                }
+                else if (hotKey.Key == nextString.Key && hotKey.Modifiers == nextString.Modifiers && ConsoleHelper.simpleTextOverlay != null)
+                {
+                    ConsoleHelper.simpleTextOverlay.NextString();
+                }
+
+                if (hotKey.Key == hideOverlay.Key && hotKey.Modifiers == hideOverlay.Modifiers)
+                {
+                    ConsoleHelper.overlayWrappers.ForEach((x) => x.Overlay.ChangeVisability());
+                }
+            };
+
+            return hotKeyManager;
         }
 
     }
